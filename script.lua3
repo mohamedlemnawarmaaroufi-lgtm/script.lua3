@@ -36,7 +36,7 @@ function checkWhitelist()
     for _,n in pairs(whitelist) do if LocalPlayer.Name:lower()==n:lower() then return true end end
     return false
 end
-if not checkWhitelist() then LocalPlayer:Kick("غير مصرح لك!") return end
+if not checkWhitelist() then LocalPlayer:Kick("لا يمكنك استعمال سكربت لأنك ليس مشتري!") return end
 
 -- ==================== SYSTEM ====================
 local autoMode = "Classic"
@@ -651,7 +651,7 @@ function launchMainHub()
     tw(closeBtn, {BackgroundTransparency = 0.3, TextTransparency = 0}, 0.4)
     task.wait(0.25); tw(divLine, {BackgroundTransparency = 0.4}, 0.4)
 
-    print("[MOH] Premium UI — Ready!")
+    badgetitle.txt("[MOH] Premium  — Ready!")
 end
 
 -- ==================== ACTIVATE PROTECTION ====================
@@ -661,4 +661,4 @@ Ghost:AntiKickShield()
 Ghost:PlayerGuiShield()
 Ghost:AntiTeleportDetect()
 
-print("MOH HUB VIP - LOADED")
+badgetitle.txt("MOH HUB - LOADED")
