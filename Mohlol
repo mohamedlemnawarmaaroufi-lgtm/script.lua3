@@ -1,0 +1,329 @@
+-- Script Name: MOH
+-- Color: Black background, Red accents, White text
+-- Updated Tracking System (Integrated with Tool Check)
+
+-- انتظار تحميل اللعبة
+if not game:IsLoaded() then game.Loaded:Wait() end
+
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+
+-- إنشاء الواجهة الرئيسية
+local MOHGui = Instance.new("ScreenGui")
+MOHGui.Name = "MOHGUI"
+MOHGui.Parent = CoreGui
+MOHGui.ResetOnSpawn = false
+
+-- دالة الأطراف المنحنية
+local function MakeCurvy(obj, amount)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, amount or 12)
+    corner.Parent = obj
+end
+
+-- دالة السحب
+local function MakeDraggable(gui)
+    local dragging, dragInput, dragStart, startPos
+    gui.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = gui.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
+    end)
+    gui.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            gui.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+
+-----------------------------------------
+-- [1] واجهة المفتاح (Key System)
+-----------------------------------------
+local KeyFrame = Instance.new("Frame")
+KeyFrame.Size = UDim2.new(0, 320, 0, 190)
+KeyFrame.Position = UDim2.new(0.5, -160, 0.5, -95)
+KeyFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+KeyFrame.BorderSizePixel = 0
+KeyFrame.Parent = MOHGui
+MakeDraggable(KeyFrame)
+MakeCurvy(KeyFrame, 15)
+
+local KeyStroke = Instance.new("UIStroke")
+KeyStroke.Color = Color3.fromRGB(255, 0, 0)
+KeyStroke.Thickness = 2
+KeyStroke.Parent = KeyFrame
+
+local KeyTitle = Instance.new("TextLabel")
+KeyTitle.Size = UDim2.new(1, 0, 0, 50)
+KeyTitle.BackgroundTransparency = 1
+KeyTitle.Text = "MOH KEY"
+KeyTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeyTitle.TextSize = 22
+KeyTitle.Font = Enum.Font.GothamBold
+KeyTitle.Parent = KeyFrame
+
+local KeyInput = Instance.new("TextBox")
+KeyInput.Size = UDim2.new(0.85, 0, 0, 40)
+KeyInput.Position = UDim2.new(0.075, 0, 0.35, 0)
+KeyInput.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+KeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeyInput.PlaceholderText = "Paste Key Here..."
+KeyInput.Text = ""
+KeyInput.Font = Enum.Font.Gotham
+KeyInput.Parent = KeyFrame
+MakeCurvy(KeyInput, 8)
+
+local SubmitKeyBtn = Instance.new("TextButton")
+SubmitKeyBtn.Size = UDim2.new(0.4, 0, 0, 40)
+SubmitKeyBtn.Position = UDim2.new(0.075, 0, 0.7, 0)
+SubmitKeyBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+SubmitKeyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SubmitKeyBtn.Text = "LOGIN"
+SubmitKeyBtn.Font = Enum.Font.GothamBold
+SubmitKeyBtn.Parent = KeyFrame
+MakeCurvy(SubmitKeyBtn, 10)
+
+local DiscordBtn = Instance.new("TextButton")
+DiscordBtn.Size = UDim2.new(0.4, 0, 0, 40)
+DiscordBtn.Position = UDim2.new(0.525, 0, 0.7, 0)
+DiscordBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+DiscordBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+DiscordBtn.Text = "DISCORD"
+DiscordBtn.Font = Enum.Font.GothamBold
+DiscordBtn.Parent = KeyFrame
+MakeCurvy(DiscordBtn, 10)
+
+-----------------------------------------
+-- [2] الواجهة الرئيسية (Main Hub)
+-----------------------------------------
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 280, 0, 300)
+MainFrame.Position = UDim2.new(0.5, -140, 0.5, -150)
+MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+MainFrame.BorderSizePixel = 0
+MainFrame.Visible = false
+MainFrame.Parent = MOHGui
+MakeDraggable(MainFrame)
+MakeCurvy(MainFrame, 20)
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(255, 0, 0)
+MainStroke.Thickness = 2
+MainStroke.Parent = MainFrame
+
+local MainTitle = Instance.new("TextLabel")
+MainTitle.Size = UDim2.new(1, 0, 0, 40)
+MainTitle.BackgroundTransparency = 1
+MainTitle.Text = "MOH"
+MainTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+MainTitle.TextSize = 24
+MainTitle.Font = Enum.Font.GothamBold
+MainTitle.Parent = MainFrame
+
+-- شريط الأخبار المتحرك
+local InfoLabel = Instance.new("TextLabel")
+InfoLabel.Size = UDim2.new(1, 0, 0, 30)
+InfoLabel.Position = UDim2.new(0, 0, 0.16, 0)
+InfoLabel.BackgroundTransparency = 1
+InfoLabel.Text = ""
+InfoLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+InfoLabel.TextSize = 14
+InfoLabel.Font = Enum.Font.GothamMedium
+InfoLabel.TextTransparency = 1
+InfoLabel.Parent = MainFrame
+
+local function StartTextLoop()
+    local messages = {"تابع حسابنا على تيك توك", "mohamedlemnwar"}
+    while true do
+        for _, msg in ipairs(messages) do
+            InfoLabel.Text = msg
+            TweenService:Create(InfoLabel, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
+            task.wait(2)
+            TweenService:Create(InfoLabel, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
+            task.wait(0.6)
+        end
+    end
+end
+
+-----------------------------------------
+-- [3] نظام التتبع الجديد (مع فحص الأداة)
+-----------------------------------------
+local autoEnabled = false
+local currentTarget = nil
+
+-- زر التتبع
+local TrackBtn = Instance.new("TextButton")
+TrackBtn.Size = UDim2.new(0.85, 0, 0, 45)
+TrackBtn.Position = UDim2.new(0.075, 0, 0.35, 0)
+TrackBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+TrackBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+TrackBtn.Text = "Auto: OFF"
+TrackBtn.Font = Enum.Font.GothamBold
+TrackBtn.TextSize = 18
+TrackBtn.Parent = MainFrame
+MakeCurvy(TrackBtn, 12)
+
+local function ToggleAuto()
+    autoEnabled = not autoEnabled
+    
+    if autoEnabled then
+        TrackBtn.Text = "Auto: ON"
+        TrackBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 50)
+    else
+        TrackBtn.Text = "Auto: OFF"
+        TrackBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+        currentTarget = nil
+        
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("Humanoid") then
+            local root = char:FindFirstChild("HumanoidRootPart")
+            if root then
+                char.Humanoid:MoveTo(root.Position)
+            end
+        end
+    end
+end
+
+TrackBtn.MouseButton1Click:Connect(ToggleAuto)
+
+-- حلقة البحث عن الهدف في الخلفية
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        if not autoEnabled then
+            currentTarget = nil
+            continue
+        end
+
+        local char = LocalPlayer.Character
+        if not char then continue end
+
+        local root = char:FindFirstChild("HumanoidRootPart")
+        if not root then continue end
+
+        local tool = char:FindFirstChildOfClass("Tool")
+        if not tool then continue end
+
+        local myPos = root.Position
+        local bestTarget = nil
+        local bestDist = math.huge
+
+        for _, v in pairs(Players:GetPlayers()) do
+            if v == LocalPlayer then continue end
+            if not v.Character then continue end
+
+            local tr = v.Character:FindFirstChild("HumanoidRootPart")
+            local hum = v.Character:FindFirstChild("Humanoid")
+
+            if not tr then continue end
+            if not hum then continue end
+            if hum.Health <= 0 then continue end
+
+            local d = (myPos - tr.Position).Magnitude
+            if d < bestDist then
+                bestDist = d
+                bestTarget = v
+            end
+        end
+
+        currentTarget = bestTarget
+    end
+end)
+
+-- حلقة تنفيذ الحركة نحو الهدف
+RunService.RenderStepped:Connect(function()
+    if not autoEnabled then return end
+
+    local char = LocalPlayer.Character
+    if not char then return end
+
+    local hum = char:FindFirstChild("Humanoid")
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not hum or not root then return end
+
+    local tool = char:FindFirstChildOfClass("Tool")
+    if not tool then return end
+
+    if currentTarget and currentTarget.Character then
+        local targetRoot = currentTarget.Character:FindFirstChild("HumanoidRootPart")
+        local targetHum = currentTarget.Character:FindFirstChild("Humanoid")
+        if targetRoot and targetHum and targetHum.Health > 0 then
+            local targetPos = targetRoot.Position
+            hum:MoveTo(targetPos)
+            if (root.Position - targetPos).Magnitude < 2 then
+                hum:MoveTo(targetPos + targetRoot.CFrame.LookVector * 2)
+            end
+        end
+    end
+end)
+
+-----------------------------------------
+-- [4] زر تعيين المفتاح (Keybind)
+-----------------------------------------
+local BindBtn = Instance.new("TextButton")
+BindBtn.Size = UDim2.new(0.85, 0, 0, 45)
+BindBtn.Position = UDim2.new(0.075, 0, 0.60, 0)
+BindBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+BindBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+BindBtn.Text = "Set Keybind: None"
+BindBtn.Font = Enum.Font.GothamBold
+BindBtn.TextSize = 16
+BindBtn.Parent = MainFrame
+MakeCurvy(BindBtn, 12)
+
+local currentBind = nil
+local isBinding = false
+
+BindBtn.MouseButton1Click:Connect(function()
+    isBinding = true
+    BindBtn.Text = "Press any key..."
+end)
+
+UserInputService.InputBegan:Connect(function(input, processed)
+    if processed then return end
+    
+    if isBinding and input.UserInputType == Enum.UserInputType.Keyboard then
+        currentBind = input.KeyCode
+        BindBtn.Text = "Bind: " .. tostring(currentBind.Name)
+        isBinding = false
+    elseif currentBind and input.KeyCode == currentBind then
+        ToggleAuto()
+    end
+end)
+
+-----------------------------------------
+-- [5] الدخول والمفتاح
+-----------------------------------------
+local CorrectKey = "hmz82"
+
+SubmitKeyBtn.MouseButton1Click:Connect(function()
+    if KeyInput.Text == CorrectKey then
+        KeyFrame.Visible = false
+        MainFrame.Visible = true
+        task.spawn(StartTextLoop)
+    else
+        KeyInput.Text = "Wrong Key!"
+        task.wait(1)
+        KeyInput.Text = ""
+    end
+end)
+
+DiscordBtn.MouseButton1Click:Connect(function()
+    if setclipboard then setclipboard("https://discord.gg/3QVvex44z") end
+    DiscordBtn.Text = "COPIED!"
+    task.wait(2)
+    DiscordBtn.Text = "DISCORD"
+end)
